@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Royal City Map – Alliance Tags</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f2f1ec;--fg:#1d1d1b;--card:#fff;--bd:#c9c6bb;--ac:#2563eb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181d;--fg:#ececec;--card:#20252c;--bd:#3a414b;--ac:#6ea0ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,sans-serif}
+.wrap{display:flex;flex-wrap:wrap;gap:14px;padding:14px;max-width:1300px;margin:auto}
+.mapbox{flex:1 1 640px;min-width:0}
+svg{width:100%;height:auto;display:block;border-radius:6px;background:#14140f}
+.r{cursor:pointer}.r:hover{filter:brightness(.93)}
+.lbl{font:700 10px system-ui,sans-serif;fill:#161614;stroke:#fff;stroke-width:2.6;paint-order:stroke;text-anchor:middle;pointer-events:none}
+.lbl .t{font-size:12px;font-weight:800}
+.id{font:9px system-ui;fill:#333;text-anchor:middle;pointer-events:none}
+.panel{flex:0 1 300px;min-width:260px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;align-self:flex-start}
+h1{font-size:16px;margin:0 0 8px}
+input[type=text],textarea{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+textarea{height:70px;font-size:11px}
+button{padding:7px 11px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer;font:inherit}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid #0004}
+#list{max-height:200px;overflow:auto;margin:0;padding:0;list-style:none}
+#list li{padding:4px 0;cursor:pointer;border-bottom:1px solid var(--bd)}
+small{opacity:.7}
+.hide{display:none!important}
+#banner{background:#fde68a;color:#3b2f00;border-radius:6px;padding:6px 8px;margin-bottom:8px;font-size:12px}
+</style></head><body>
+<div class="wrap">
+<div class="mapbox"><svg id="map" viewBox="0 0 888 744"></svg></div>
+<div class="panel">
+<h1>Royal City map</h1>
+<div id="banner" class="hide"><b>Edit mode.</b> Changes are drafts stored in this browser only. Click <b>Download data.json</b>, then upload it to your GitHub repo to publish.</div>
+<div id="info"><small>Click a city block to see its alliance.</small></div>
+<div id="editor" class="hide">
+<input type="text" id="name" list="dl" placeholder="Alliance tag, e.g. COVN" maxlength="8" autocomplete="off">
+<datalist id="dl"></datalist>
+<div class="row"><button class="p" id="save">Save tag</button><button id="clear">Clear</button></div>
+</div>
+<label><input type="checkbox" id="ids"> Show block numbers</label>
+<h1 style="margin-top:14px">Alliances (<span id="cnt">0</span>)</h1>
+<ul id="list"></ul>
+<div class="row"><button id="dl2">Download data.json</button><button id="cp">Copy JSON</button></div>
+<div id="admin" class="hide">
+<div class="row"><button id="impf">Import file…</button><button id="imp">Import pasted JSON</button><button id="pub">Load published</button><button id="rst">Clear all</button></div>
+<input type="file" id="file" accept=".json,application/json" class="hide">
+<textarea id="io" placeholder="Paste JSON here to import"></textarea>
+</div>
+<div id="status" style="margin-top:8px"><small></small></div>
+</div></div>
+<script>
+//LAYOUT
+const S=8,W=111,H=93;
+const PAL=["#e6194b","#3cb44b","#ffe119","#4363d8","#f58231","#911eb4","#46f0f0","#f032e6","#bcf60c","#fabebe","#008080","#e6beff","#c48a4a","#fffac8","#c1666b","#aaffc3","#b5b53a","#ffd8b1","#5b6cff","#a8a8a8","#ff6f91","#00c49a","#ffb703","#8ecae6","#b5838d","#6a994e","#ff9f1c","#9d4edd","#2ec4b6","#d62828"];
+const D=[
+[1,"0,0 85,0 85,97 0,90"],[1,"85,0 168,0 168,60 140,97 85,97"],[1,"168,0 282,0 282,78 168,62"],[2,"282,0 413,0 413,62 388,95 318,95 282,78"],
+[1,"413,0 540,0 540,60 470,60 470,100 400,100 388,95 413,62"],[1,"540,0 625,0 625,100 585,100 585,60 540,60"],[1,"625,0 720,0 720,55 655,57 650,100 625,100"],
+[1,"720,0 840,0 840,40 800,65 745,60 720,55"],[1,"840,0 888,0 888,100 830,100 800,65 840,40"],
+[1,"0,90 85,97 143,97 143,168 45,150 0,160"],[2,"140,97 168,62 228,62 228,168 143,168"],[1,"228,75 318,95 318,160 228,168"],
+[2,"318,95 388,95 405,100 405,175 400,210 318,210"],[2,"405,100 470,100 470,135 515,140 515,175 405,180"],[2,"470,60 585,60 585,100 605,102 603,135 515,138 470,135"],
+[2,"650,55 720,55 745,60 745,100 715,130 640,130 625,100 650,100"],[2,"745,60 800,65 820,100 790,150 745,160 715,130 745,100"],[1,"820,100 888,100 888,200 845,215 790,150"],
+[2,"603,135 640,130 715,130 745,160 695,180 695,215 620,215 603,185"],[1,"695,160 745,160 790,150 810,215 780,235 720,240 695,215"],
+[1,"45,150 143,168 183,205 180,232 100,238 85,200"],[1,"228,168 318,160 345,160 318,210 318,232 228,232 183,205"],[2,"100,238 180,232 228,232 228,262 180,262 150,275 85,270"],
+[3,"170,262 228,262 270,262 270,345 215,348 170,320"],[3,"228,232 318,232 318,265 270,262 228,262"],[3,"318,210 405,210 425,232 405,262 318,265"],
+[1,"60,275 85,270 150,275 170,262 170,320 130,340 60,335"],[1,"0,160 45,150 85,200 100,238 85,270 60,275 60,335 0,335"],[1,"0,335 60,335 130,340 105,340 105,420 0,420"],
+[2,"105,340 215,348 215,380 178,412 88,420"],[3,"178,380 250,380 250,455 178,455"],[4,"215,348 270,345 340,365 340,390 260,390 215,380"],[4,"250,390 340,390 335,430 310,455 250,455"],
+[5,"270,278 405,262 405,320 340,365 270,345"],[5,"300,455 335,430 400,430 400,520 300,520"],[6,"320,322 405,290 405,430 340,432 320,395"],
+[6,"405,290 455,275 575,285 575,375 545,370 520,325 405,320"],[6,"400,430 440,455 545,375 575,375 570,465 560,510 400,510"],
+[5,"555,372 710,360 712,445 640,445 570,465 575,375"],[4,"578,288 718,300 695,340 710,360 555,372 575,375"],[4,"385,235 430,190 525,200 525,258 455,275 405,262"],
+[5,"527,238 565,198 618,198 618,265 575,285 527,262"],[3,"487,170 515,140 603,135 603,215 565,198 525,200 487,195"],[3,"618,215 700,215 735,240 735,300 718,300 618,265"],
+[2,"735,240 780,225 840,225 840,310 795,312 735,300"],[1,"810,215 845,215 888,200 888,300 840,310 840,260 810,225"],[1,"798,312 840,310 888,300 888,415 810,415 797,380"],
+[3,"697,340 735,300 797,312 797,360 700,365"],[3,"713,368 797,360 810,415 810,438 713,440"],[2,"713,440 810,438 810,500 730,500 713,492"],[1,"810,415 888,415 888,505 810,505"],
+[4,"570,465 640,445 712,445 712,495 585,515 570,495"],[3,"585,515 712,497 730,500 730,545 585,545"],[2,"730,500 820,502 820,548 730,548"],[1,"820,502 888,505 888,590 810,590 810,548"],
+[2,"585,545 745,550 755,592 600,610 585,580"],[1,"755,592 810,590 812,620 755,620"],[1,"810,590 888,590 888,640 830,640 812,620"],
+[2,"580,610 755,620 755,655 700,690 600,665 580,640"],[2,"755,622 812,620 830,640 830,690 700,690 700,660"],[1,"830,640 888,640 888,739 810,739 810,690"],
+[1,"700,690 810,690 810,739 700,739"],[1,"585,690 700,690 700,739 585,739"],[1,"460,690 585,690 585,739 460,739"],[1,"385,690 460,690 460,739 385,739"],
+[1,"280,680 385,680 385,739 280,739"],[1,"155,690 280,690 280,739 155,739"],[1,"0,650 80,650 80,700 155,700 155,739 0,739"],[1,"0,530 80,530 100,540 80,650 0,650"],
+[2,"80,635 215,630 215,690 155,700 80,700"],[1,"83,550 195,545 195,630 80,635"],[2,"195,545 245,545 290,600 290,640 195,630"],[1,"215,630 290,640 300,680 280,690 215,690"],
+[3,"245,505 320,505 335,520 340,600 305,618 245,595"],[3,"320,505 400,515 410,520 410,598 340,600 335,520"],[3,"400,520 440,520 515,545 528,630 460,600 410,598"],
+[2,"290,600 340,600 410,598 460,600 460,640 410,680 300,680 290,640"],[4,"400,495 475,510 480,550 410,550"],[4,"475,510 570,495 585,515 585,545 525,545 480,550"],
+[2,"525,545 585,545 585,580 600,610 580,610 580,640 528,630"],[2,"225,455 300,455 300,520 245,505 200,545 195,500"],[2,"30,485 195,480 195,545 80,548 30,545"],
+[1,"88,420 178,420 178,455 225,455 195,480 100,482"],[1,"0,420 88,420 100,482 30,485 0,530"],[1,"395,600 460,600 460,690 385,690 385,640"],[1,"460,640 580,640 585,690 460,690"]
+];
+const R=D.map(d=>d[0]),g=Array.from({length:H},()=>Array(W).fill(-2));
+const inP=(p,x,y)=>{let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const a=p[i],b=p[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
+D.forEach((d,i)=>{const p=d[1].split(" ").map(s=>s.split(",").map(Number));for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(inP(p,x*S+4,y*S+4))g[y][x]=i});
+const N4=[[1,0],[-1,0],[0,1],[0,-1]],q=[];
+for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(g[y][x]>=0)q.push([x,y]);
+for(let h=0;h<q.length;h++){const[x,y]=q[h];for(const[dx,dy]of N4){const a=x+dx,b=y+dy;if(a>=0&&b>=0&&a<W&&b<H&&g[b][a]===-2){g[b][a]=g[y][x];q.push([a,b])}}}
+for(let p=0;p<2;p++){const n=g.map(r=>r.slice());for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c={};for(const[dx,dy]of N4){const v=(g[y+dy]||[])[x+dx];if(v>=0)c[v]=(c[v]||0)+1}
+for(const k in c)if(c[k]>=3&&+k!==g[y][x])n[y][x]=+k}for(let y=0;y<H;y++)g[y]=n[y]}
+for(let y=40;y<58;y++)for(let x=50;x<68;x++)g[y][x]=-1;
+//ENDLAYOUT
+const NS="http://www.w3.org/2000/svg",svg=document.getElementById("map"),$=id=>document.getElementById(id);
+const EDIT=location.hash==="#edit"||/[?&]edit(=|&|$)/.test(location.search),DK="rcm_draft_v1";
+let st={t:{},c:{}},sel=null,pub={t:{},c:{}};
+const norm=o=>{const r={t:{},c:{}};if(o&&typeof o==="object"){if(o.t&&typeof o.t==="object")for(const k in o.t)if(R[k]!==undefined&&o.t[k])r.t[k]=String(o.t[k]).toUpperCase().slice(0,8);if(o.c&&typeof o.c==="object")r.c=o.c}
+st=r;for(const k in r.t)assign(r.t[k]);prune();return r};
+const persist=()=>{if(!EDIT)return;try{localStorage.setItem(DK,JSON.stringify(st))}catch(e){}};
+const say=m=>$("status").firstChild.textContent=m;
+function mk(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
+const d=R.map(()=>""),runs=R.map(()=>[]);
+for(let y=0;y<H;y++){let x=0;while(x<W){const v=g[y][x];let e=x;while(e<W&&g[y][e]===v)e++;
+if(v>=0){d[v]+=`M${x*S} ${y*S}h${(e-x)*S}v${S}h${-(e-x)*S}z`;runs[v].push([e-x,y,x])}x=e}}
+const NEU="#e9e6da",els=[],labs=[],nums=[];
+R.forEach((l,i)=>{const p=mk("path",{d:d[i],fill:NEU,stroke:NEU,"stroke-width":.7,class:"r"});p.onclick=()=>pick(i);els.push(p)});
+mk("path",{d:`M${50*S} ${40*S}H${68*S}V${58*S}H${50*S}Z`,fill:"#8a8d92"});
+const ed=[];
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=g[y][x];
+if(x<W-1&&g[y][x+1]!==v)ed.push([`M${(x+1)*S} ${y*S}v${S}`,v,g[y][x+1]]);
+if(y<H-1&&g[y+1][x]!==v)ed.push([`M${x*S} ${(y+1)*S}h${S}`,v,g[y+1][x]])}
+mk("path",{d:ed.map(e=>e[0]).join(""),fill:"none",stroke:"#14140f","stroke-opacity":.6,"stroke-width":1.5,"pointer-events":"none"});
+const so=mk("path",{fill:"none",stroke:"#e11d48","stroke-width":4,"pointer-events":"none"});
+R.forEach((l,i)=>{const r=runs[i],tl=r.reduce((a,b)=>a+b[0],0),my=r.reduce((a,b)=>a+b[1]*b[0],0)/tl;
+const b=r.reduce((m,q)=>q[0]-Math.abs(q[1]-my)*.3>m[0]-Math.abs(m[1]-my)*.3?q:m),x=(b[2]+b[0]/2)*S,y=(b[1]+.5)*S;
+const nt=mk("text",{x,y:y-16,class:"id"});nt.textContent=i+1;nums.push(nt);
+const t=mk("text",{x,y,class:"lbl"});t.innerHTML=`<tspan x="${x}">[Level ${l}]</tspan><tspan class="t" x="${x}" dy="13"></tspan>`;labs.push(t)});
+function outline(s){so.setAttribute("d",ed.filter(e=>s.has(e[1])!==s.has(e[2])).map(e=>e[0]).join(""))}
+function assign(tag){if(st.c[tag]!==undefined)return;const u=new Set(Object.values(st.c));let k=0;while(u.has(k)&&k<PAL.length)k++;st.c[tag]=k<PAL.length?k:Object.keys(st.c).length%PAL.length}
+function prune(){const u=new Set(Object.values(st.t));for(const k in st.c)if(!u.has(k))delete st.c[k]}
+function draw(){const cnt={};
+R.forEach((l,i)=>{const tag=st.t[i],c=tag?PAL[st.c[tag]%PAL.length]:NEU;els[i].setAttribute("fill",c);els[i].setAttribute("stroke",c);
+const ts=labs[i].children;ts[1].textContent=tag||"";ts[0].setAttribute("dy",tag?"-2":"4");if(tag)cnt[tag]=(cnt[tag]||0)+1;
+nums[i].style.display=$("ids").checked?"":"none"});
+const k=Object.keys(cnt).sort();$("cnt").textContent=k.length;$("list").innerHTML="";$("dl").innerHTML="";
+k.forEach(t=>{const li=document.createElement("li");li.innerHTML=`<span class="sw" style="background:${PAL[st.c[t]%PAL.length]}"></span><b></b> <small>× ${cnt[t]}</small>`;
+li.querySelector("b").textContent=t;li.onclick=()=>{outline(new Set(R.map((_,i)=>i).filter(i=>st.t[i]===t)));$("info").innerHTML="<b>"+li.querySelector("b").innerHTML+"</b> <small>· "+cnt[t]+" blocks</small>"};
+$("list").appendChild(li);const o=document.createElement("option");o.value=t;$("dl").appendChild(o)})}
+function pick(i){sel=i;outline(new Set([i]));$("info").innerHTML="<b>Block #"+(i+1)+"</b> <small>· [Level "+R[i]+"]"+(st.t[i]?" · "+st.t[i]:"")+"</small>";if(EDIT){$("name").value=st.t[i]||"";$("name").focus()}}
+function save(){if(sel===null){$("info").innerHTML="<small>Select a city block on the map first.</small>";return}
+const v=$("name").value.trim().toUpperCase();if(v){st.t[sel]=v;assign(v)}else delete st.t[sel];prune();persist();draw();pick(sel);say("Draft updated. Download data.json to publish.")}
+if(EDIT){["editor","admin","banner"].forEach(i=>$(i).classList.remove("hide"));$("info").firstChild.textContent="Click a city block, then type its alliance tag."}
+$("save").onclick=save;$("name").onkeydown=e=>{if(e.key==="Enter")save()};
+$("clear").onclick=()=>{$("name").value="";save()};$("ids").onchange=draw;
+const json=()=>JSON.stringify({v:1,updated:new Date().toISOString().slice(0,10),t:st.t,c:st.c},null,2);
+$("dl2").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([json()],{type:"application/json"}));a.download="data.json";document.body.appendChild(a);a.click();a.remove();say("Downloaded data.json")};
+$("cp").onclick=async()=>{try{await navigator.clipboard.writeText(json());say("JSON copied.")}catch(e){$("io").classList.remove("hide");$("io").value=json();$("io").select();say("Copy the JSON from the box.")}};
+const imp=t=>{try{norm(JSON.parse(t));persist();draw();say("Imported. Download data.json to publish.")}catch(e){alert("Invalid JSON")}};
+$("imp").onclick=()=>imp($("io").value);
+$("impf").onclick=()=>$("file").click();
+$("file").onchange=e=>{const f=e.target.files[0];if(f)f.text().then(imp);e.target.value=""};
+$("pub").onclick=()=>{norm(pub);persist();draw();say("Loaded the published data.")};
+$("rst").onclick=()=>{if(confirm("Clear all tags in this draft?")){norm({});persist();draw()}};
+(async()=>{try{const r=await fetch("data.json?"+Date.now());if(!r.ok)throw 0;pub=await r.json()}catch(e){say("Could not load data.json. Use GitHub Pages or a local web server.")}
+let d=null;if(EDIT){try{d=JSON.parse(localStorage.getItem(DK)||"null")}catch(e){}}
+norm(d||pub);draw()})();
+</script></body></html>
