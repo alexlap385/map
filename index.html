@@ -48,6 +48,7 @@ small{opacity:.7}
 <textarea id="io" placeholder="Paste JSON here to import"></textarea>
 </div>
 <div id="status" style="margin-top:8px"><small></small></div>
+<div class="row hide" id="lfrow"><button id="lf">Load data.json from this computer…</button><input type="file" id="file2" accept=".json,application/json" class="hide"></div>
 </div></div>
 <script>
 //LAYOUT
@@ -96,9 +97,13 @@ const NM=["Old Oak", "Gravel Slope", "Windmill Town", "Copper Street", "Plaster 
 const LN=i=>{const n=NM[i],p=n.indexOf(" ")<0?[]:[...n.matchAll(/ /g)].map(m=>m.index);if(("["+LB[i]+" - "+n+"]").length<=16||!p.length)return["["+LB[i]+" - "+n+"]"];const c=p.reduce((a,b)=>Math.abs(b-n.length/2)<Math.abs(a-n.length/2)?b:a);return["["+LB[i]+" - "+n.slice(0,c),n.slice(c+1)+"]"]};
 
 const NS="http://www.w3.org/2000/svg",svg=document.getElementById("map"),$=id=>document.getElementById(id);
+const KI=k=>{const i=NM.indexOf(k);return i>=0?i:(/^\d+$/.test(k)&&+k<NM.length?+k:-1)};
+const byName=t=>Object.fromEntries(Object.entries(t).sort((a,b)=>a[0]-b[0]).map(([k,v])=>[NM[k],v]));
+const fromName=t=>{const r={};for(const k in t){const i=KI(k);if(i>=0)r[i]=t[k]}return r};
+const EMB={"t": {"Old Oak": "NAC", "Gravel Slope": "ETSU", "Windmill Town": "FDA", "Copper Street": "FDA", "Plaster Wall": "STF", "Raven’s Roost": "TGD1", "Bluestone Slope": "AVE", "Wheatsheaf": "MPAK", "Stonebrook Town": "4O4", "Opal Mine": "FDA", "Whitestone Town": "ETSU", "Broken Bridgehead": "VPAX", "Amber Road": "AVE", "Violet": "IRH", "Stonechant Market": "STF", "Sailport": "AVE", "Anvil Town": "MPAK", "Stag Path": "GFD", "Twinspire Town": "GER", "Birchwood Grove": "GER", "Redsoil Wastes": "FDA", "Fisher’s Bay": "VPAX", "Goldgrain Town": "SOM", "Gale Heights": "DKO", "Deepmere Town": "CAT", "Falcon’s Keep": "AVE", "Crow’s Beak": "SOM", "Millstone Creek": "VPAX", "Fox Den": "VPAX", "Lark Lane": "DKO", "Stormgate": "SOM", "Phantom City": "SOM", "Sandwind Keep": "DKO", "Temple of Order": "DKO", "Temple of Chaos": "COVN", "Sky Fortress": "COVN", "Lionheart Fortress": "DKO", "Nightfall Fortress": "STF", "Temple of War": "BLN", "Everpeak": "STF", "Dawnhold": "AVE", "Temple of Nature": "STF", "Drywall Tower": "IRH", "Ironwall City": "STF", "Windwhisper Market": "BF3", "Pinewood Grove": "DARK", "Springhead": "BF3", "Holyspring City": "XRAY", "Silverleaf Grove": "BLN", "Nymph Falls": "4O4", "Mossy Crag": "4O4", "Mithril Hall": "BLN", "Frostwolf Camp": "BLN", "Greatwood Town": "BORN", "Redbrick House": "OKE", "Rose Garden": "BLN", "Mistveil Village": "BORN", "Pinecone Market": "OKE", "Beacon Point": "POL", "Stagcall Vale": "RED", "Howling Vale": "TBP", "Lamp Pavilion": "FFX", "Wildberry Thicket": "RED", "Snail Shell": "RED", "Narroway": "B4N", "Coal Pit": "B4N", "Frostleaf Market": "BAF", "Haystack": "UKR", "Eagles’ Peak": "UKR", "Echo Town": "CAT", "Old Mill": "MYTH", "Stardust Road": "CAT", "Dry Well": "CAT", "Cloudtop Highlands": "COVN", "Cliffside Citadel": "COVN", "Stillwater River": "POL", "Irongate Town": "B4N", "Emerald City": "COVN", "Sunspire City": "CAT", "Blackwater Ferry": "POL", "Rose Court": "COVN", "Sailshadow Harbor": "MYTH", "Graywolf Vale": "DKO", "Maple Town": "WAT", "Dripping Cavern": "MYTH", "Scavenger": "POL", "Royal City": "COVN"}, "c": {"COVN": 0, "DKO": 1, "STF": 2, "BLN": 3, "AVE": 4, "SOM": 5, "CAT": 6, "POL": 7, "VPAX": 8, "FDA": 9, "B4N": 10, "UKR": 11, "MYTH": 12, "4O4": 13, "RED": 14, "GER": 15, "IRH": 16, "MPAK": 17, "ETSU": 18, "DARK": 19, "XRAY": 20, "BF3": 21, "OKE": 22, "NAC": 23, "BAF": 24, "FFX": 25, "BORN": 26, "TGD1": 27, "WAT": 28, "TBP": 29, "GFD": 0}};
 const EDIT=location.hash==="#edit"||/[?&]edit(=|&|$)/.test(location.search),DK="rcm_draft_v1";
 let st={t:{},c:{}},sel=null,pub={t:{},c:{}};
-const norm=o=>{const r={t:{},c:{}};if(o&&typeof o==="object"){if(o.t&&typeof o.t==="object")for(const k in o.t)if(R[k]!==undefined&&o.t[k])r.t[k]=String(o.t[k]).toUpperCase().slice(0,8);if(o.c&&typeof o.c==="object")r.c=o.c}
+const norm=o=>{const r={t:{},c:{}};if(o&&typeof o==="object"){if(o.t&&typeof o.t==="object"){const q=fromName(o.t);for(const k in q)if(q[k])r.t[k]=String(q[k]).toUpperCase().slice(0,8)}if(o.c&&typeof o.c==="object")r.c=o.c}
 st=r;for(const k in r.t)assign(r.t[k]);prune();return r};
 const persist=()=>{if(!EDIT)return;try{localStorage.setItem(DK,JSON.stringify(st))}catch(e){}};
 const say=m=>$("status").firstChild.textContent=m;
@@ -135,7 +140,7 @@ const v=$("name").value.trim().toUpperCase();if(v){st.t[sel]=v;assign(v)}else de
 if(EDIT){["editor","admin","banner"].forEach(i=>$(i).classList.remove("hide"));$("info").firstChild.textContent="Click a city block, then type its alliance tag."}
 $("save").onclick=save;$("name").onkeydown=e=>{if(e.key==="Enter")save()};
 $("clear").onclick=()=>{$("name").value="";save()};$("ids").onchange=draw;
-const json=()=>JSON.stringify({v:1,updated:new Date().toISOString().slice(0,10),t:st.t,c:st.c},null,2);
+const json=()=>JSON.stringify({v:1,updated:new Date().toISOString().slice(0,10),t:byName(st.t),c:st.c},null,2);
 $("dl2").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([json()],{type:"application/json"}));a.download="data.json";document.body.appendChild(a);a.click();a.remove();say("Downloaded data.json")};
 $("cp").onclick=async()=>{try{await navigator.clipboard.writeText(json());say("JSON copied.")}catch(e){$("io").classList.remove("hide");$("io").value=json();$("io").select();say("Copy the JSON from the box.")}};
 const imp=t=>{try{norm(JSON.parse(t));persist();draw();say("Imported. Download data.json to publish.")}catch(e){alert("Invalid JSON")}};
@@ -144,7 +149,9 @@ $("impf").onclick=()=>$("file").click();
 $("file").onchange=e=>{const f=e.target.files[0];if(f)f.text().then(imp);e.target.value=""};
 $("pub").onclick=()=>{norm(pub);persist();draw();say("Loaded the published data.")};
 $("rst").onclick=()=>{if(confirm("Clear all tags in this draft?")){norm({});persist();draw()}};
-(async()=>{try{const r=await fetch("data.json?"+Date.now());if(!r.ok)throw 0;pub=await r.json()}catch(e){say("Could not load data.json. Use GitHub Pages or a local web server.")}
+$("lf").onclick=()=>$("file2").click();
+$("file2").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{pub=JSON.parse(t);if(!EDIT||!localStorage.getItem(DK))norm(pub);else norm(pub);persist();draw();say("Loaded "+f.name+" from your computer.")}catch(x){say("That file is not valid JSON.")}});e.target.value=""};
+(async()=>{let m="";try{const r=await fetch("data.json?"+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);pub=await r.json();m="Loaded data.json"+(pub.updated?" (updated "+pub.updated+")":"")}catch(e){pub=EMB;m="Could not read data.json ("+(e.message||"error")+"). Showing the built-in copy."}say(m);if(pub===EMB)$("lfrow").classList.remove("hide");
 let d=null;if(EDIT){try{d=JSON.parse(localStorage.getItem(DK)||"null")}catch(e){}}
 norm(d||pub);draw()})();
 </script></body></html>
