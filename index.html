@@ -10,7 +10,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,sans-
 .mapbox{flex:1 1 640px;min-width:0}
 svg{width:100%;height:auto;display:block;border-radius:6px;background:#14140f}
 .r{cursor:pointer}.r:hover{filter:brightness(.93)}
-.lbl{font:700 10px system-ui,sans-serif;fill:#161614;stroke:#fff;stroke-width:2.6;paint-order:stroke;text-anchor:middle;pointer-events:none}
+.lbl{font:700 9.5px system-ui,sans-serif;fill:#161614;stroke:#fff;stroke-width:2.6;paint-order:stroke;text-anchor:middle;pointer-events:none}
 .lbl .t{font-size:12px;font-weight:800}
 .id{font:9px system-ui;fill:#333;text-anchor:middle;pointer-events:none}
 .panel{flex:0 1 300px;min-width:260px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;align-self:flex-start}
@@ -82,7 +82,7 @@ const D=[
 [2,"525,545 585,545 585,580 600,610 580,610 580,640 528,630"],[2,"225,455 300,455 300,520 245,505 200,545 195,500"],[2,"30,485 195,480 195,545 80,548 30,545"],
 [1,"88,420 178,420 178,455 225,455 195,480 100,482"],[1,"0,420 88,420 100,482 30,485 0,530"],[1,"395,600 460,600 460,690 385,690 385,640"],[1,"460,640 580,640 585,690 460,690"]
 ];
-const R=D.map(d=>d[0]),g=Array.from({length:H},()=>Array(W).fill(-2));
+const R=D.map(d=>d[0]).concat(7),g=Array.from({length:H},()=>Array(W).fill(-2));
 const inP=(p,x,y)=>{let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const a=p[i],b=p[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
 D.forEach((d,i)=>{const p=d[1].split(" ").map(s=>s.split(",").map(Number));for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(inP(p,x*S+4,y*S+4))g[y][x]=i});
 const N4=[[1,0],[-1,0],[0,1],[0,-1]],q=[];
@@ -90,8 +90,11 @@ for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(g[y][x]>=0)q.push([x,y]);
 for(let h=0;h<q.length;h++){const[x,y]=q[h];for(const[dx,dy]of N4){const a=x+dx,b=y+dy;if(a>=0&&b>=0&&a<W&&b<H&&g[b][a]===-2){g[b][a]=g[y][x];q.push([a,b])}}}
 for(let p=0;p<2;p++){const n=g.map(r=>r.slice());for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c={};for(const[dx,dy]of N4){const v=(g[y+dy]||[])[x+dx];if(v>=0)c[v]=(c[v]||0)+1}
 for(const k in c)if(c[k]>=3&&+k!==g[y][x])n[y][x]=+k}for(let y=0;y<H;y++)g[y]=n[y]}
-for(let y=40;y<58;y++)for(let x=50;x<68;x++)g[y][x]=-1;
+for(let y=40;y<58;y++)for(let x=50;x<68;x++)g[y][x]=D.length;
 //ENDLAYOUT
+const NM=["Old Oak", "Gravel Slope", "Windmill Town", "Copper Street", "Plaster Wall", "Raven’s Roost", "Bluestone Slope", "Wheatsheaf", "Stonebrook Town", "Opal Mine", "Whitestone Town", "Broken Bridgehead", "Amber Road", "Violet", "Stonechant Market", "Sailport", "Anvil Town", "Stag Path", "Twinspire Town", "Birchwood Grove", "Redsoil Wastes", "Fisher’s Bay", "Goldgrain Town", "Gale Heights", "Deepmere Town", "Falcon’s Keep", "Crow’s Beak", "Millstone Creek", "Fox Den", "Lark Lane", "Stormgate", "Phantom City", "Sandwind Keep", "Temple of Order", "Temple of Chaos", "Sky Fortress", "Lionheart Fortress", "Nightfall Fortress", "Temple of War", "Everpeak", "Dawnhold", "Temple of Nature", "Drywall Tower", "Ironwall City", "Windwhisper Market", "Pinewood Grove", "Springhead", "Holyspring City", "Silverleaf Grove", "Nymph Falls", "Mossy Crag", "Mithril Hall", "Frostwolf Camp", "Greatwood Town", "Redbrick House", "Rose Garden", "Mistveil Village", "Pinecone Market", "Beacon Point", "Stagcall Vale", "Howling Vale", "Lamp Pavilion", "Wildberry Thicket", "Snail Shell", "Narroway", "Coal Pit", "Frostleaf Market", "Haystack", "Eagles’ Peak", "Echo Town", "Old Mill", "Stardust Road", "Dry Well", "Cloudtop Highlands", "Cliffside Citadel", "Stillwater River", "Irongate Town", "Emerald City", "Sunspire City", "Blackwater Ferry", "Rose Court", "Sailshadow Harbor", "Graywolf Vale", "Maple Town", "Dripping Cavern", "Scavenger", "Royal City"],LB=[1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1, 2, 3, 3, 3, 1, 1, 1, 2, 3, 4, 4, 5, 5, 6, 6, 6, 5, 4, 4, 5, 3, 3, 2, 1, 1, 3, 3, 2, 1, 4, 3, 3, 1, 2, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 3, 3, 3, 2, 4, 4, 2, 2, 2, 1, 1, 1, 1, 7];
+const LN=i=>{const n=NM[i],p=n.indexOf(" ")<0?[]:[...n.matchAll(/ /g)].map(m=>m.index);if(("["+LB[i]+" - "+n+"]").length<=16||!p.length)return["["+LB[i]+" - "+n+"]"];const c=p.reduce((a,b)=>Math.abs(b-n.length/2)<Math.abs(a-n.length/2)?b:a);return["["+LB[i]+" - "+n.slice(0,c),n.slice(c+1)+"]"]};
+
 const NS="http://www.w3.org/2000/svg",svg=document.getElementById("map"),$=id=>document.getElementById(id);
 const EDIT=location.hash==="#edit"||/[?&]edit(=|&|$)/.test(location.search),DK="rcm_draft_v1";
 let st={t:{},c:{}},sel=null,pub={t:{},c:{}};
@@ -103,9 +106,8 @@ function mk(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.set
 const d=R.map(()=>""),runs=R.map(()=>[]);
 for(let y=0;y<H;y++){let x=0;while(x<W){const v=g[y][x];let e=x;while(e<W&&g[y][e]===v)e++;
 if(v>=0){d[v]+=`M${x*S} ${y*S}h${(e-x)*S}v${S}h${-(e-x)*S}z`;runs[v].push([e-x,y,x])}x=e}}
-const NEU="#e9e6da",els=[],labs=[],nums=[];
-R.forEach((l,i)=>{const p=mk("path",{d:d[i],fill:NEU,stroke:NEU,"stroke-width":.7,class:"r"});p.onclick=()=>pick(i);els.push(p)});
-mk("path",{d:`M${50*S} ${40*S}H${68*S}V${58*S}H${50*S}Z`,fill:"#8a8d92"});
+const NEU="#e9e6da",BG=i=>i===86?"#8a8d92":NEU,els=[],labs=[],nums=[];
+R.forEach((l,i)=>{const p=mk("path",{d:d[i],fill:BG(i),stroke:BG(i),"stroke-width":.7,class:"r"});p.onclick=()=>pick(i);els.push(p)});
 const ed=[];
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=g[y][x];
 if(x<W-1&&g[y][x+1]!==v)ed.push([`M${(x+1)*S} ${y*S}v${S}`,v,g[y][x+1]]);
@@ -115,19 +117,19 @@ const so=mk("path",{fill:"none",stroke:"#e11d48","stroke-width":4,"pointer-event
 R.forEach((l,i)=>{const r=runs[i],tl=r.reduce((a,b)=>a+b[0],0),my=r.reduce((a,b)=>a+b[1]*b[0],0)/tl;
 const b=r.reduce((m,q)=>q[0]-Math.abs(q[1]-my)*.3>m[0]-Math.abs(m[1]-my)*.3?q:m),x=(b[2]+b[0]/2)*S,y=(b[1]+.5)*S;
 const nt=mk("text",{x,y:y-16,class:"id"});nt.textContent=i+1;nums.push(nt);
-const t=mk("text",{x,y,class:"lbl"});t.innerHTML=`<tspan x="${x}">[Level ${l}]</tspan><tspan class="t" x="${x}" dy="13"></tspan>`;labs.push(t)});
+const t=mk("text",{x,y,class:"lbl"});t.innerHTML=LN(i).map(q=>`<tspan x="${x}"></tspan>`).join("")+`<tspan class="t" x="${x}"></tspan>`;[...t.children].forEach((e,k,A)=>{if(k<A.length-1)e.textContent=LN(i)[k]});labs.push(t)});
 function outline(s){so.setAttribute("d",ed.filter(e=>s.has(e[1])!==s.has(e[2])).map(e=>e[0]).join(""))}
 function assign(tag){if(st.c[tag]!==undefined)return;const u=new Set(Object.values(st.c));let k=0;while(u.has(k)&&k<PAL.length)k++;st.c[tag]=k<PAL.length?k:Object.keys(st.c).length%PAL.length}
 function prune(){const u=new Set(Object.values(st.t));for(const k in st.c)if(!u.has(k))delete st.c[k]}
 function draw(){const cnt={};
-R.forEach((l,i)=>{const tag=st.t[i],c=tag?PAL[st.c[tag]%PAL.length]:NEU;els[i].setAttribute("fill",c);els[i].setAttribute("stroke",c);
-const ts=labs[i].children;ts[1].textContent=tag||"";ts[0].setAttribute("dy",tag?"-2":"4");if(tag)cnt[tag]=(cnt[tag]||0)+1;
+R.forEach((l,i)=>{const tag=st.t[i],c=tag?PAL[st.c[tag]%PAL.length]:BG(i);els[i].setAttribute("fill",c);els[i].setAttribute("stroke",c);
+const ts=labs[i].children,nl=ts.length-1,nn=nl+(tag?1:0);ts[nl].textContent=tag||"";for(let k=0;k<ts.length;k++)ts[k].setAttribute("dy",k?13:4-(nn-1)*6.5);if(tag)cnt[tag]=(cnt[tag]||0)+1;
 nums[i].style.display=$("ids").checked?"":"none"});
 const k=Object.keys(cnt).sort();$("cnt").textContent=k.length;$("list").innerHTML="";$("dl").innerHTML="";
 k.forEach(t=>{const li=document.createElement("li");li.innerHTML=`<span class="sw" style="background:${PAL[st.c[t]%PAL.length]}"></span><b></b> <small>× ${cnt[t]}</small>`;
 li.querySelector("b").textContent=t;li.onclick=()=>{outline(new Set(R.map((_,i)=>i).filter(i=>st.t[i]===t)));$("info").innerHTML="<b>"+li.querySelector("b").innerHTML+"</b> <small>· "+cnt[t]+" blocks</small>"};
 $("list").appendChild(li);const o=document.createElement("option");o.value=t;$("dl").appendChild(o)})}
-function pick(i){sel=i;outline(new Set([i]));$("info").innerHTML="<b>Block #"+(i+1)+"</b> <small>· [Level "+R[i]+"]"+(st.t[i]?" · "+st.t[i]:"")+"</small>";if(EDIT){$("name").value=st.t[i]||"";$("name").focus()}}
+function pick(i){sel=i;outline(new Set([i]));$("info").innerHTML="<b>"+LN(i).join(" ")+"</b> <small>· Block #"+(i+1)+"</small><small>"+(st.t[i]?" · "+st.t[i]:"")+"</small>";if(EDIT){$("name").value=st.t[i]||"";$("name").focus()}}
 function save(){if(sel===null){$("info").innerHTML="<small>Select a city block on the map first.</small>";return}
 const v=$("name").value.trim().toUpperCase();if(v){st.t[sel]=v;assign(v)}else delete st.t[sel];prune();persist();draw();pick(sel);say("Draft updated. Download data.json to publish.")}
 if(EDIT){["editor","admin","banner"].forEach(i=>$(i).classList.remove("hide"));$("info").firstChild.textContent="Click a city block, then type its alliance tag."}
